@@ -46,27 +46,41 @@ while url:
 
 #print(all_quotes)
 
-#game logic
+#get random quote
 num = random.randrange(0, len(all_quotes)-1)
 quote = all_quotes[num].get('text')
 author = all_quotes[num].get('author')
+about = all_quotes[num].get('about-link')
 
-answer = input(f"Guess the author of this quote {quote} (4 attempts): ")
-attempts = 1
+#promp question
+answer = input(f"Guess the author of this quote {quote} (Attempts remaining: 4):\n")
+attempts = 3
 
-while answer != author and attempts < 4:
+while answer.lower() != author.lower() and attempts > 0:
 
-    if(attempts < 3):
-        answer = input(f"Guess the author of this quote {quote} ({4-attempts} attempts remaining): ")
-    else:
-        answer = input(f"Guess the author of this quote {quote} ({4-attempts} attempt remaining): ")
-    attempts += 1
+    #find author born day and birth location and display it as hint
+    if(attempts == 3):
+        res = requests.get(f"{base_url}{about}")
+        soup = BeautifulSoup(res.text, "html.parser")
+        birth_date = soup.find(class_="author-born-date").get_text()
+        birth_location = soup.find(class_="author-born-location").get_text()
+        print(f"Hint #1: This author was born on {birth_date} {birth_location}")
 
-if(attempts == 4):
-    print(f"Good try! The author was {author}")
-else:
-    print(f"Congratulations! You are correct!")
+    #display first name initial as hint
+    elif(attempts == 2):
+        print(f"Hint #2: The author's first name starts with {author[0]}")
 
-
-
+    #display last name initial as hint (since name is in the form Manvir Mann, we can use split)
+    elif(attempts == 1):
+        last_initial = author.split(" ")[1][0]
+        print(f"Hint #3: The author's last name starts with {last_initial}")
     
+    #promp question to user
+    answer = input(f"Try again. Guess the author of this quote {quote} (Attempts remaining: {attempts}):\n")
+    attempts -= 1
+    
+
+if(answer.lower() == author.lower()):
+    print(f"Congratulations! You are correct! (Answer: {author})")    
+else:
+    print(f"Good try! The author was {author}")
